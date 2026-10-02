@@ -55,5 +55,5 @@ An enterprise-grade autonomous vehicle simulation and navigation controller engi
 
 ## Author
 - GitHub: [@rdj415](https://github.com/rdj415)
-- Roblox: `rdj415`
-- Discord: `rdj415`
+- Roblox: `DiscoUnicorn478`
+- Discord: `rd_rb`

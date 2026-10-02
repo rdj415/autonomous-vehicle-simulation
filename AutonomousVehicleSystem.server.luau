@@ -1,4 +1,4 @@
--- Connected Discord-GitHub | Discord: rdj415 | Roblox: rdj415
+-- Connected Discord-GitHub | Discord: rd_rb | Roblox: DiscoUnicorn478
 --!strict
 
 --[[
