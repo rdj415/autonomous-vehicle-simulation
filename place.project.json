@@ -1,0 +1,21 @@
+{
+  "name": "Autonomous Vehicle Simulation Demo",
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$className": "Workspace",
+      "Vehicle": {
+        "$path": "C:/Users/Adam/Documents/GitHub/SBAC/MainGameMode/src/assets/Assets/Vehicles/Car.rbxm"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "TrackEnvironment": {
+        "$path": "TrackEnvironment.server.luau"
+      },
+      "AutonomousVehicleSystem": {
+        "$path": "AutonomousVehicleSystem.server.luau"
+      }
+    }
+  }
+}
