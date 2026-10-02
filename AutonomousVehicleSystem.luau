@@ -520,21 +520,18 @@ function AutonomousVehicleSystem:Destroy()
 	self._seat.SteerFloat = 0
 end
 
--- Entry point: If running as an active Server Script.
-local vehicleModel: Model? = script:FindFirstAncestorOfClass("Model")
-if not (vehicleModel and vehicleModel:FindFirstChild("Chassis")) then
-	for _, child in ipairs(Workspace:GetChildren()) do
-		if child:IsA("Model") and child:FindFirstChild("Chassis") then
-			vehicleModel = child
-			break
-		end
-	end
-end
+--[[
+    Entry point: Execution lifecycle when loaded directly as a Server Script.
+    Binds the controller either to an ancestor Model, an existing Workspace chassis,
+    or listens for newly spawned models within Workspace.ActiveVehicles.
+]]
+local function bindControllerToModel(targetModel: Model)
+	local chassis = targetModel:WaitForChild("Chassis", 5) :: BasePart?
+	if not chassis then return end
 
-if vehicleModel and vehicleModel:FindFirstChild("Chassis") then
-	local controller = AutonomousVehicleSystem.new(vehicleModel)
+	local controller = AutonomousVehicleSystem.new(targetModel)
 
-	-- Populate waypoints from Workspace.Waypoints folder if present.
+	-- Populate patrol coordinates from Workspace.Waypoints if available.
 	task.spawn(function()
 		local waypointsFolder = Workspace:WaitForChild("Waypoints", 10)
 		if waypointsFolder then
@@ -553,6 +550,39 @@ if vehicleModel and vehicleModel:FindFirstChild("Chassis") then
 	end)
 
 	controller:Start()
+end
+
+local vehicleModel: Model? = script:FindFirstAncestorOfClass("Model")
+if not (vehicleModel and vehicleModel:FindFirstChild("Chassis")) then
+	for _, child in ipairs(Workspace:GetChildren()) do
+		if child:IsA("Model") and child:FindFirstChild("Chassis") then
+			vehicleModel = child
+			break
+		end
+	end
+end
+
+if not vehicleModel then
+	local activeFolder = Workspace:FindFirstChild("ActiveVehicles") or Workspace:WaitForChild("ActiveVehicles", 5)
+	if activeFolder then
+		for _, child in ipairs(activeFolder:GetChildren()) do
+			if child:IsA("Model") and child:FindFirstChild("Chassis") then
+				vehicleModel = child
+				break
+			end
+		end
+		if not vehicleModel then
+			activeFolder.ChildAdded:Connect(function(child)
+				if child:IsA("Model") then
+					bindControllerToModel(child)
+				end
+			end)
+		end
+	end
+end
+
+if vehicleModel then
+	bindControllerToModel(vehicleModel)
 end
 
 return AutonomousVehicleSystem
