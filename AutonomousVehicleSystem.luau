@@ -68,6 +68,7 @@ local SHARP_TURN_STEER_THRESHOLD: number = 0.45
 local CORNERING_THROTTLE_REDUCTION_FACTOR: number = 0.55
 local MIN_CORNERING_THROTTLE_FLOOR: number = 0.35
 local REVERSE_MANEUVER_STEER_THRESHOLD: number = 0.8
+local FORWARD_HEMISPHERE_Z_BOUNDARY: number = 0.0
 local FULL_FORWARD_THROTTLE: number = 1.0
 local FULL_REVERSE_THROTTLE: number = -1.0
 local NEUTRAL_THROTTLE: number = 0.0
@@ -77,6 +78,10 @@ local BRAKE_DETECTION_SPEED_THRESHOLD_MPH: number = 1.0
 local SENSOR_BEAM_COUNT: number = 3
 local SENSOR_BEAM_INITIAL_THICKNESS: number = 0.15
 local SENSOR_BEAM_ACTIVE_THICKNESS: number = 0.18
+local SENSOR_BEAM_INITIAL_LENGTH: number = 1.0
+local SENSOR_INDEX_FORWARD: number = 1
+local SENSOR_INDEX_LEFT: number = 2
+local SENSOR_INDEX_RIGHT: number = 3
 local SENSOR_BEAM_TRANSPARENCY: number = 0.35
 local MIN_RAY_RENDER_DISTANCE: number = 0.1
 local BUMPER_CLEARANCE_OFFSET_STUDS: number = 1.2
@@ -266,7 +271,7 @@ function AutonomousVehicleSystem.new(vehicleModel: Model, configOverride: Vehicl
 			beamPart.CastShadow = false
 			beamPart.Material = Enum.Material.Neon
 			beamPart.Transparency = SENSOR_BEAM_TRANSPARENCY
-			beamPart.Size = Vector3.new(SENSOR_BEAM_INITIAL_THICKNESS, SENSOR_BEAM_INITIAL_THICKNESS, 1.0)
+			beamPart.Size = Vector3.new(SENSOR_BEAM_INITIAL_THICKNESS, SENSOR_BEAM_INITIAL_THICKNESS, SENSOR_BEAM_INITIAL_LENGTH)
 			beamPart.Color = BEAM_COLOR_CLEAR
 			beamPart.Parent = sensorFolder
 			table.insert(visualParts, beamPart)
@@ -384,9 +389,9 @@ function AutonomousVehicleSystem:_castSensoryRays(): (Vector3, RaycastResult?, R
 		local endLeft = if hitLeft then hitLeft.Position else (rayOrigin + leftVector)
 		local endRight = if hitRight then hitRight.Position else (rayOrigin + rightVector)
 
-		self:_renderSensorRay(1, rayOrigin, endFwd, hitForward ~= nil)
-		self:_renderSensorRay(2, rayOrigin, endLeft, hitLeft ~= nil)
-		self:_renderSensorRay(3, rayOrigin, endRight, hitRight ~= nil)
+		self:_renderSensorRay(SENSOR_INDEX_FORWARD, rayOrigin, endFwd, hitForward ~= nil)
+		self:_renderSensorRay(SENSOR_INDEX_LEFT, rayOrigin, endLeft, hitLeft ~= nil)
+		self:_renderSensorRay(SENSOR_INDEX_RIGHT, rayOrigin, endRight, hitRight ~= nil)
 	end
 
 	return rayOrigin, hitForward, hitLeft, hitRight
@@ -628,7 +633,7 @@ function AutonomousVehicleSystem:_calculateSteerAndThrottle(targetPosition: Vect
 	local targetThrottle = FULL_FORWARD_THROTTLE
 
 	-- Evaluate if target lies ahead in the front hemisphere (-Z in local object space).
-	if localTarget.Z < 0 then
+	if localTarget.Z < FORWARD_HEMISPHERE_Z_BOUNDARY then
 		local turnSeverity = math.abs(blendedSteering)
 		if turnSeverity > SHARP_TURN_STEER_THRESHOLD then
 			-- Reduce throttle through sharp turns to stay within the tire traction circle and avoid understeer.
@@ -893,4 +898,5 @@ if vehicleModel then
 end
 
 return AutonomousVehicleSystem
+
 
